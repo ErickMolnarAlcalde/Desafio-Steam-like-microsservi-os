@@ -33,6 +33,7 @@ public class UserEntity {
     @Column(name = "create_at")
     private LocalDateTime createdAt;
 
+    @Builder.Default
     private Boolean deleted = false;
 
 
