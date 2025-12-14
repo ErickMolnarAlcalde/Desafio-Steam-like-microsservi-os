@@ -1,5 +1,8 @@
 package com.desafio.user_and_wallet_service.services;
 
+import com.desafio.user_and_wallet_service.Exceptions.UserEmailAlreadyExistsException;
+import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
+import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
@@ -22,7 +25,7 @@ public class UserService {
 
     public UserResponseDto create(UserRequestDto userRequestDto){
         if(userRepository.existsByEmail(userRequestDto.getEmail())){
-            throw new RuntimeException("Email já cadastrado!");
+            throw new UserEmailAlreadyExistsException("Email já cadastrado!");
         }
         var entity = userMapper.toEntity(userRequestDto);
         entity.setPassword(bCryptPasswordEncoder.encode(entity.getPassword()));
@@ -32,7 +35,7 @@ public class UserService {
 
     public UserResponseDto getByEmail(String email){
         var entity = userRepository.findByEmail(email).orElseThrow(()->
-                new RuntimeException("email não encontrado!"));
+                new UserEmailNotfoundException("email não encontrado!"));
         return userMapper.toResponse(entity);
     }
 
@@ -45,27 +48,27 @@ public class UserService {
 
     public UserResponseDto login(LoginRequestDto login){
         var entity = userRepository.findByEmail(login.getEmail()).orElseThrow(()->
-                new RuntimeException("Email não encontrado!"));
+                new UserEmailNotfoundException("Email não encontrado!"));
         if(!(bCryptPasswordEncoder.matches(login.getPassword(), entity.getPassword()))){
-            throw new RuntimeException("Senha inválida!");
+            throw new UserPasswordNotRightException("Senha inválida!");
         }
        return userMapper.toResponse(entity);
     }
 
     public void softDelete(LoginRequestDto login){
         var entity = userRepository.findByEmail(login.getEmail()).orElseThrow(()->
-                new RuntimeException("Email não encontrado!"));
+                new UserEmailNotfoundException("Email não encontrado!"));
         if(!(bCryptPasswordEncoder.matches(login.getPassword(), entity.getPassword()))){
-            throw new RuntimeException("Senha inválida!");
+            throw new UserPasswordNotRightException("Senha inválida!");
         }
         entity.setDeleted(true);
         userRepository.save(entity);
     }
     public UserResponseDto alter(LoginRequestDto login){
         var entity = userRepository.findByEmail(login.getEmail()).orElseThrow(()->
-                new RuntimeException("Email não encontrado!"));
+                new UserEmailNotfoundException("Email não encontrado!"));
         if(!(bCryptPasswordEncoder.matches(login.getPassword(), entity.getPassword()))){
-            throw new RuntimeException("Senha inválida!");
+            throw new UserPasswordNotRightException("Senha inválida!");
         }
         var alteredEntity = userMapper.toAlter(login);
         userRepository.save(alteredEntity);
