@@ -3,12 +3,15 @@ package com.desafio.user_and_wallet_service.services;
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailAlreadyExistsException;
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
 import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
+import com.desafio.user_and_wallet_service.Exceptions.WalletIdNotFoundException;
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
+import com.desafio.user_and_wallet_service.entities.WalletEntity;
 import com.desafio.user_and_wallet_service.mappers.UserMapper;
 import com.desafio.user_and_wallet_service.repositories.UserRepository;
+import com.desafio.user_and_wallet_service.repositories.WalletRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final WalletRepository walletRepository;
 
     public UserResponseDto create(UserRequestDto userRequestDto){
         if(userRepository.existsByEmail(userRequestDto.getEmail())){
@@ -61,9 +65,13 @@ public class UserService {
         if(!(bCryptPasswordEncoder.matches(login.getPassword(), entity.getPassword()))){
             throw new UserPasswordNotRightException("Senha inválida!");
         }
+        var walletiD = entity.getWallet();
+
         entity.setDeleted(true);
+        walletiD.setDeleted(true);
         userRepository.save(entity);
     }
+
     public UserResponseDto alter(LoginRequestDto login){
         var entity = userRepository.findByEmail(login.getEmail()).orElseThrow(()->
                 new UserEmailNotfoundException("Email não encontrado!"));

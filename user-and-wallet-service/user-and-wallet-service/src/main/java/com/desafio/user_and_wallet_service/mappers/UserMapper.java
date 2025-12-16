@@ -4,10 +4,10 @@ import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
+import com.desafio.user_and_wallet_service.entities.WalletEntity;
 import com.desafio.user_and_wallet_service.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.ErrorResponseException;
 
 import java.time.LocalDateTime;
 
@@ -19,24 +19,36 @@ public class UserMapper {
 
 
     public UserEntity toEntity(UserRequestDto requestDto){
-        return UserEntity.builder()
+        var user= UserEntity.builder()
                 .name(requestDto.getName())
                 .email(requestDto.getEmail())
                 .password(requestDto.getPassword())
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        WalletEntity wallet = WalletEntity.builder()
+                .user(user)
+                .build();
+
+        user.setWallet(wallet);
+
+        return user;
     }
 
     public UserEntity toAlter(LoginRequestDto requestDto){
-        var userEntity = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
+        var user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
                 new RuntimeException("usuário não encontrado"));
 
-        return UserEntity.builder()
-                .name(userEntity.getName())
+        user = UserEntity.builder()
+                .name(user.getName())
                 .email(requestDto.getEmail())
                 .password(requestDto.getPassword())
                 .build();
+
+        return user;
     }
+
+
 
     public UserResponseDto toResponse(UserEntity entity){
         return UserResponseDto.builder()

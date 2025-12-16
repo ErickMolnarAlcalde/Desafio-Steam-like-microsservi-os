@@ -59,6 +59,17 @@ public class GlobalHandlerException {
         return errorDto;
     }
 
+    @ExceptionHandler(WalletIdNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorDto walletIdNotFoundException(WalletIdNotFoundException ex){
+        ErrorDto errorDto = new ErrorDto(
+                ex.getMessage(),
+               "Nenhuma carteira foi localizada com o ID informado",
+                LocalDateTime.now()
+        );
+        return errorDto;
+    }
+
 
 
 

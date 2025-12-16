@@ -33,6 +33,9 @@ public class UserEntity {
     @Column(name = "create_at")
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "user",cascade = CascadeType.PERSIST)
+    private WalletEntity wallet;
+
     @Builder.Default
     private Boolean deleted = false;
 
