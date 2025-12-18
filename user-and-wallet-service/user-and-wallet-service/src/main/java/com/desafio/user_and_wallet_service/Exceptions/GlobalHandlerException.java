@@ -70,9 +70,9 @@ public class GlobalHandlerException {
         return errorDto;
     }
 
-    @ExceptionHandler(WalletIdNotFoundException.class)
+    @ExceptionHandler(WalletValueNotEnoughException.class)
     @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
-    public ErrorDto walletValueNotEnoughException(WalletIdNotFoundException ex){
+    public ErrorDto walletValueNotEnoughException(WalletValueNotEnoughException ex){
         ErrorDto errorDto = new ErrorDto(
                 ex.getMessage(),
                 "Saldo insuficiente para completar a transação",

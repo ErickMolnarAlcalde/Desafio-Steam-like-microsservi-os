@@ -17,14 +17,14 @@ public class WalletController {
     private WalletService walletService;
 
     @PostMapping("/deposit")
-    public ResponseEntity<WalletResponseDto> depositValue(BigDecimal value, String email){
-        return ResponseEntity.ok().body(walletService.depositValue(value,email));
+    public ResponseEntity<WalletResponseDto> depositValue(WalletRequestDto requestDto){
+        return ResponseEntity.ok().body(walletService.depositValue(requestDto));
 
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<WalletResponseDto> withdrawValue(WalletRequestDto requestDto){
-        return ResponseEntity.ok().body(walletService.withdrawValue(requestDto.getEmail(),email));
+        return ResponseEntity.ok().body(walletService.withdrawValue(requestDto));
     }
 
     @GetMapping("/consult/{email}")
