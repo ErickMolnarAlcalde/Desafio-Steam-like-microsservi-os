@@ -35,8 +35,8 @@ public class UserController {
         return ResponseEntity.ok().body(userService.login(requestDto));
     }
 
-    @GetMapping("/get-by-email")
-    public ResponseEntity<UserResponseDto> getByEmail(@PathVariable String email){
+    @GetMapping("/get-by-email/{email}")
+    public ResponseEntity<UserResponseDto> getByEmail(@RequestParam String email){
         return ResponseEntity.ok().body(userService.getByEmail(email));
     }
 

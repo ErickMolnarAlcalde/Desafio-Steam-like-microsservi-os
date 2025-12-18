@@ -2,6 +2,8 @@ package com.desafio.user_and_wallet_service.services;
 
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailAlreadyExistsException;
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
+import com.desafio.user_and_wallet_service.Exceptions.WalletValueNotEnoughException;
+import com.desafio.user_and_wallet_service.dtos.WalletRequestDto;
 import com.desafio.user_and_wallet_service.dtos.WalletResponseDto;
 import com.desafio.user_and_wallet_service.repositories.UserRepository;
 import com.desafio.user_and_wallet_service.repositories.WalletRepository;
@@ -17,12 +19,12 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
 
-    public WalletResponseDto depositValue(BigDecimal value, String email){
-        var entity = userRepository.findByEmail(email).orElseThrow(()->
+    public WalletResponseDto depositValue(WalletRequestDto requestDto){
+        var entity = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
                 new UserEmailNotfoundException("email não encontrado!"));
-        entity.getWallet().setBalance(entity.getWallet().getBalance().add(value));
+        entity.getWallet().setBalance(entity.getWallet().getBalance().add(requestDto.getValue()));
         var wallet = entity.getWallet();
-        wallet.setBalance(wallet.getBalance().add(value));
+        wallet.setBalance(wallet.getBalance().add(requestDto.getValue()));
         walletRepository.save(wallet);
 
         return WalletResponseDto.builder()
@@ -31,12 +33,16 @@ public class WalletService {
                 .build();
     }
 
-    public WalletResponseDto withdrawValue(BigDecimal value, String email){
-        var entity = userRepository.findByEmail(email).orElseThrow(()->
+    public WalletResponseDto withdrawValue(WalletRequestDto requestDto){
+        var entity = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
                 new UserEmailNotfoundException("email não encontrado!"));
-
         var wallet = entity.getWallet();
-        wallet.setBalance(wallet.getBalance().subtract(value));
+
+        if(wallet.getBalance().compareTo(requestDto.getValue())<0){
+            throw new WalletValueNotEnoughException("Retirada não autorizada");
+        }
+
+            wallet.setBalance(wallet.getBalance().subtract(requestDto.getValue()));
         walletRepository.save(wallet);
 
         return WalletResponseDto.builder()
@@ -47,7 +53,7 @@ public class WalletService {
 
     public WalletResponseDto consultValue(String email){
         var entity = userRepository.findByEmail(email).orElseThrow(()->
-                new UserEmailAlreadyExistsException("email não encontrado!"));
+                new UserEmailNotfoundException("email não encontrado!"));
 
         return WalletResponseDto.builder()
                 .userName(entity.getName())

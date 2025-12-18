@@ -33,6 +33,12 @@ public class UserService {
         }
         var entity = userMapper.toEntity(userRequestDto);
         entity.setPassword(bCryptPasswordEncoder.encode(entity.getPassword()));
+
+        WalletEntity wallet = WalletEntity.builder()
+                .user(entity)
+                .build();
+
+        entity.setWallet(wallet);
         var savedEntity = userRepository.save(entity);
         return userMapper.toResponse(savedEntity);
     }

@@ -1,5 +1,6 @@
 package com.desafio.user_and_wallet_service.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,7 @@ public class WalletEntity {
 
     @OneToOne
     @JoinColumn(name = "user_id",  nullable = false, unique = true)
+    @JsonIgnore
     private UserEntity user;
 
     @Builder.Default

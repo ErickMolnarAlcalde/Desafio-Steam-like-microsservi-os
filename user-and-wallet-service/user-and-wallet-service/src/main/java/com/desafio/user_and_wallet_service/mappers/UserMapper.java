@@ -26,12 +26,6 @@ public class UserMapper {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        WalletEntity wallet = WalletEntity.builder()
-                .user(user)
-                .build();
-
-        user.setWallet(wallet);
-
         return user;
     }
 

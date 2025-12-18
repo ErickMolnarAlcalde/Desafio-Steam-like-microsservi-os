@@ -1,5 +1,6 @@
 package com.desafio.user_and_wallet_service.controllers;
 
+import com.desafio.user_and_wallet_service.dtos.WalletRequestDto;
 import com.desafio.user_and_wallet_service.dtos.WalletResponseDto;
 import com.desafio.user_and_wallet_service.services.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,12 @@ public class WalletController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<WalletResponseDto> withdrawValue(BigDecimal value, String email){
-        return ResponseEntity.ok().body(walletService.withdrawValue(value,email));
+    public ResponseEntity<WalletResponseDto> withdrawValue(WalletRequestDto requestDto){
+        return ResponseEntity.ok().body(walletService.withdrawValue(requestDto.getEmail(),email));
     }
 
-    @GetMapping("/consult")
-    public ResponseEntity<WalletResponseDto> withdrawValue(String email){
+    @GetMapping("/consult/{email}")
+    public ResponseEntity<WalletResponseDto> withdrawValue(@RequestParam String email){
         return ResponseEntity.ok().body(walletService.consultValue(email));
     }
 }
