@@ -7,6 +7,8 @@ import org.springframework.validation.annotation.Validated;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserRequestDto {
 
     @NotBlank(message = "O nome é obrigatório")
