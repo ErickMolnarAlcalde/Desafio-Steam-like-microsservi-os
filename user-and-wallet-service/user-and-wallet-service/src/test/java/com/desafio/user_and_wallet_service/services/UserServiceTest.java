@@ -1,5 +1,6 @@
 package com.desafio.user_and_wallet_service.services;
 
+import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
@@ -77,16 +78,63 @@ class UserServiceTest {
         UserResponseDto responseDto = userService.create(dto);
 
         //verificação (assert)
-        assertEquals(expectedResponse.getId(),responseDto.getId());
+        assertEquals(expectedResponse.getId(), responseDto.getId());
         assertEquals(expectedResponse.getName(), responseDto.getName());
-        assertEquals(expectedResponse.getCreatedAt(),responseDto.getCreatedAt());
+        assertEquals(expectedResponse.getCreatedAt(), responseDto.getCreatedAt());
         verify(userRepository).save(any(UserEntity.class));
     }
 
     @Test
     void getByEmail_ShouldReturnUser_WhenEmailExists() {
+        //arrange
+        String email = "dona.maria@email.com";
 
+        //cria uma entidade
+        UserEntity userEntity = new UserEntity();
+        userEntity.setIdUser(UUID.randomUUID());
+        userEntity.setEmail(email);
+        userEntity.setName("Dona Maria");
+        userEntity.setCreatedAt(LocalDateTime.now());
+
+        UserResponseDto expectedResponse = UserResponseDto.builder()
+                .id(userEntity.getIdUser())
+                .name(userEntity.getName())
+                .createdAt(userEntity.getCreatedAt())
+                .build();
+
+        //defini comprtamento dos mocks
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(userEntity));
+        when(userMapper.toResponse(userEntity)).thenReturn(expectedResponse);
+
+        // ---------- Act ----------
+        //esta chamando,executando o método que queremos chamar
+        UserResponseDto actualResponse = userService.getByEmail(email);
+
+        //---------- Assert ----------
+        //verifica se o retorno esta igual o esperado
+        assertEquals(expectedResponse.getId(), actualResponse.getId());
+        assertEquals(expectedResponse.getName(), actualResponse.getName());
+        assertEquals(expectedResponse.getCreatedAt(), actualResponse.getCreatedAt());
+
+        //confirma se os mocks foram chamados exatamente uma vez
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(userMapper, times(1)).toResponse(userEntity);
     }
+
+    @Test
+    void getByEmail_ShouldNotReturnUser_WhenEmailNotExists(){
+        String email = "falha@email.com";
+
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        assertThrows(UserEmailNotfoundException.class,()->userService.getByEmail(email));
+
+
+        verify(userRepository,times(1)).findByEmail(email);
+        verify(userMapper,never()).toResponse(any());
+    }
+
 
 
     @Test
