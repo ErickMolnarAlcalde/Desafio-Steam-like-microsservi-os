@@ -6,6 +6,7 @@ import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
+import com.desafio.user_and_wallet_service.entities.WalletEntity;
 import com.desafio.user_and_wallet_service.mappers.UserMapper;
 import com.desafio.user_and_wallet_service.repositories.UserRepository;
 import com.desafio.user_and_wallet_service.repositories.WalletRepository;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -177,8 +179,44 @@ class UserServiceTest {
     }
 
     @Test
-    void softDelete() {
+    void softDelete_ShouldMarkUserAndWalletAsDeleted_WhenCredentialsAreValid() {
+        LoginRequestDto loginRequestDto = new LoginRequestDto(
+                "dona.maria@gmail.com",
+                "mariaforte123"
+        );
+        WalletEntity wallet = WalletEntity.builder()
+                .idWallet(UUID.randomUUID())
+                .balance(BigDecimal.TEN)
+                .deleted(false)
+                .build();
 
+        UserEntity user = UserEntity.builder()
+                .idUser(UUID.randomUUID())
+                .name("Maria")
+                .email(loginRequestDto.getEmail())
+                .password(loginRequestDto.getPassword())
+                .createdAt(LocalDateTime.now())
+                .wallet(wallet)
+                .deleted(false)
+                .build();
+
+        wallet.setUser(user); // liga as entidades
+
+        when(userRepository.findByEmail(loginRequestDto.getEmail())).thenReturn(Optional.of(user));
+        when(bCryptPasswordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())).thenReturn(true);
+        //Você usa thenAnswer(...) especialmente quando quer testar mudanças feitas dentro do método, como entity.setDeleted(true), sem se preocupar em criar manualmente um objeto de retorno
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        // --- Act (executa o método) ---
+        userService.softDelete(loginRequestDto);
+
+        // --- Assert (verificações) ---
+        assertTrue(user.getDeleted(), "Usuário deve estar marcado como deletado");
+        assertTrue(user.getWallet().getDeleted(), "Carteira deve estar marcada como deletada");
+
+        verify(userRepository).findByEmail(loginRequestDto.getEmail());
+        verify(bCryptPasswordEncoder).matches(loginRequestDto.getPassword(), user.getPassword());
+        verify(userRepository).save(user);
     }
 
     @Test
