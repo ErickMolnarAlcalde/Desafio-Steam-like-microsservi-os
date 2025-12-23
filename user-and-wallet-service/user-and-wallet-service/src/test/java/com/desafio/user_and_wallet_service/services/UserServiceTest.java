@@ -1,6 +1,8 @@
 package com.desafio.user_and_wallet_service.services;
 
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
+import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
+import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
@@ -136,17 +138,47 @@ class UserServiceTest {
     }
 
 
-
     @Test
-    void getAll() {
-    }
+    void login_ShouldReturnResponse_WhenEmailAndPasswordAreCorrect() {
 
-    @Test
-    void login() {
+        LoginRequestDto loginRequestDto = new LoginRequestDto(
+                "dona.maria@gmail.com",
+                "mariaforte123"
+        );
+
+        UserEntity user = UserEntity.builder()
+                .idUser(UUID.randomUUID())
+                .name("Maria")
+                .email(loginRequestDto.getEmail())
+                .password(loginRequestDto.getPassword())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UserResponseDto expected = UserResponseDto.builder()
+                .id(user.getIdUser())
+                .name(user.getName())
+                .createdAt(user.getCreatedAt())
+                .build();
+
+        when(userRepository.findByEmail(loginRequestDto.getEmail())).thenReturn(Optional.of(user));
+        when(bCryptPasswordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())).thenReturn(true);
+        when(userMapper.toResponse(user)).thenReturn(expected);
+
+
+        UserResponseDto result = userService.login(loginRequestDto);
+
+
+        assertEquals(expected.getName(), result.getName());
+        assertEquals(expected.getId(), result.getId());
+        assertEquals(expected.getCreatedAt(), result.getCreatedAt());
+
+        verify(userRepository).findByEmail(loginRequestDto.getEmail());
+        verify(userMapper).toResponse(user);
     }
 
     @Test
     void softDelete() {
+
     }
 
     @Test
