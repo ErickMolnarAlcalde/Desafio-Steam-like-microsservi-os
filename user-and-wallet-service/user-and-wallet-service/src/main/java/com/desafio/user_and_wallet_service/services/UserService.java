@@ -5,6 +5,7 @@ import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException
 import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
 import com.desafio.user_and_wallet_service.Exceptions.WalletIdNotFoundException;
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
+import com.desafio.user_and_wallet_service.dtos.UserAlterRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
@@ -78,16 +79,28 @@ public class UserService {
         userRepository.save(entity);
     }
 
-    public UserResponseDto alter(LoginRequestDto login){
-        var entity = userRepository.findByEmail(login.getEmail()).orElseThrow(()->
-                new UserEmailNotfoundException("Email não encontrado!"));
-        if(!(bCryptPasswordEncoder.matches(login.getPassword(), entity.getPassword()))){
+    public UserResponseDto alter(UserAlterRequestDto requestDto) {
+        var entity = userRepository.findByEmail(requestDto.getOldEmail())
+                .orElseThrow(() -> new UserEmailNotfoundException("Email não encontrado!"));
+
+        if (!bCryptPasswordEncoder.matches(requestDto.getOldpassword(), entity.getPassword())) {
             throw new UserPasswordNotRightException("Senha inválida!");
         }
-        var alteredEntity = userMapper.toAlter(login);
-        userRepository.save(alteredEntity);
 
-        return userMapper.toResponse(alteredEntity);
+        // aplica alterações
+        if (requestDto.getNewName() != null && !requestDto.getNewName().isBlank()) {
+            entity.setName(requestDto.getNewName());
+        }
+        if (requestDto.getNewEmail() != null && !requestDto.getNewEmail().isBlank()) {
+            entity.setEmail(requestDto.getNewEmail());
+        }
+        if (requestDto.getNewPassword() != null && !requestDto.getNewPassword().isBlank()) {
+            entity.setPassword(bCryptPasswordEncoder.encode(requestDto.getNewPassword()));
+        }
+
+        userRepository.save(entity);
+
+        return userMapper.toResponse(entity);
     }
 
 

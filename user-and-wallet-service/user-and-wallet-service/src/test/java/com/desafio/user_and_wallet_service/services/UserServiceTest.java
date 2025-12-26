@@ -106,7 +106,7 @@ class UserServiceTest {
                 .createdAt(userEntity.getCreatedAt())
                 .build();
 
-        //defini comprtamento dos mocks
+        //defini comportamento dos mocks
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(userEntity));
         when(userMapper.toResponse(userEntity)).thenReturn(expectedResponse);
 

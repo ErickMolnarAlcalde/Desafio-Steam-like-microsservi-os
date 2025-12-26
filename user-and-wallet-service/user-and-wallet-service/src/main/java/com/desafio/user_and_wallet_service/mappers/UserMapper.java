@@ -1,6 +1,7 @@
 package com.desafio.user_and_wallet_service.mappers;
 
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
+import com.desafio.user_and_wallet_service.dtos.UserAlterRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
@@ -24,19 +25,6 @@ public class UserMapper {
                 .email(requestDto.getEmail())
                 .password(requestDto.getPassword())
                 .createdAt(LocalDateTime.now())
-                .build();
-
-        return user;
-    }
-
-    public UserEntity toAlter(LoginRequestDto requestDto){
-        var user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
-                new RuntimeException("usuário não encontrado"));
-
-        user = UserEntity.builder()
-                .name(user.getName())
-                .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
                 .build();
 
         return user;
