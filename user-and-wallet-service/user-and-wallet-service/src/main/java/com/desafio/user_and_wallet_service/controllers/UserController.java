@@ -1,6 +1,7 @@
 package com.desafio.user_and_wallet_service.controllers;
 
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
+import com.desafio.user_and_wallet_service.dtos.UserAlterRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.services.UserService;
@@ -52,8 +53,8 @@ public class UserController {
     }
 
     @PatchMapping("/alter")
-    public ResponseEntity<UserResponseDto> alter(@RequestBody LoginRequestDto requestDto){
-        return ResponseEntity.ok().body(userService.alter(requestDto));
+    public ResponseEntity<UserResponseDto> alter(@RequestBody UserAlterRequestDto userAlterRequestDto){
+        return ResponseEntity.ok().body(userService.alter(userAlterRequestDto));
     }
 
 

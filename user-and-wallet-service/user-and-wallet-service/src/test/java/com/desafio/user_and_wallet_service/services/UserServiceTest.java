@@ -3,6 +3,7 @@ package com.desafio.user_and_wallet_service.services;
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
 import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
+import com.desafio.user_and_wallet_service.dtos.UserAlterRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserResponseDto;
 import com.desafio.user_and_wallet_service.entities.UserEntity;
@@ -126,17 +127,17 @@ class UserServiceTest {
     }
 
     @Test
-    void getByEmail_ShouldNotReturnUser_WhenEmailNotExists(){
+    void getByEmail_ShouldNotReturnUser_WhenEmailNotExists() {
         String email = "falha@email.com";
 
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        assertThrows(UserEmailNotfoundException.class,()->userService.getByEmail(email));
+        assertThrows(UserEmailNotfoundException.class, () -> userService.getByEmail(email));
 
 
-        verify(userRepository,times(1)).findByEmail(email);
-        verify(userMapper,never()).toResponse(any());
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(userMapper, never()).toResponse(any());
     }
 
 
@@ -220,6 +221,136 @@ class UserServiceTest {
     }
 
     @Test
-    void alter() {
+    void alter_ShouldUpdateUserSuccessfully_WhenDataIsValid() {
+        // ARRANGE
+        UserAlterRequestDto requestDto = new UserAlterRequestDto(
+                "old@email.com",
+                "senhaAntiga123",
+                "Novo Nome",
+                "novo@email.com",
+                "novaSenha123"
+        );
+
+        // Usuário existente no "banco"
+        UserEntity existingUser = new UserEntity();
+        existingUser.setIdUser(UUID.randomUUID());
+        existingUser.setEmail(requestDto.getOldEmail());
+        existingUser.setName("Nome Antigo");
+        existingUser.setPassword("senhaCriptAntiga"); // senha OLD criptografada
+
+        // Simula o DTO de resposta esperado
+        UserResponseDto expectedResponse = UserResponseDto.builder()
+                .id(existingUser.getIdUser())
+                .name(requestDto.getNewName())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // Configuração dos mocks
+        when(userRepository.findByEmail(requestDto.getOldEmail()))
+                .thenReturn(Optional.of(existingUser));
+
+        // Simula que a senha antiga confere
+        when(bCryptPasswordEncoder.matches(requestDto.getOldpassword(), existingUser.getPassword()))
+                .thenReturn(true);
+
+        // Simula a criptografia da nova senha
+        when(bCryptPasswordEncoder.encode(requestDto.getNewPassword()))
+                .thenReturn("senhaCriptNova");
+
+        // Quando salvar, apenas devolve o próprio objeto alterado
+        when(userRepository.save(any(UserEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Mapeia a entidade transformada em resposta
+        when(userMapper.toResponse(existingUser))
+                .thenReturn(expectedResponse);
+
+        // ACT
+        UserResponseDto result = userService.alter(requestDto);
+
+        // ASSERT
+        assertEquals(requestDto.getNewName(), existingUser.getName());
+        assertEquals(requestDto.getNewEmail(), existingUser.getEmail());
+        assertEquals("senhaCriptNova", existingUser.getPassword());
+        assertEquals(expectedResponse.getName(), result.getName());
+        assertEquals(expectedResponse.getId(), result.getId());
+
+        // Verifica as interações corretas com os mocks
+        verify(userRepository).findByEmail(requestDto.getOldEmail());
+        verify(bCryptPasswordEncoder)
+                .matches(requestDto.getOldpassword(), "senhaCriptAntiga"); // senha antiga
+        verify(bCryptPasswordEncoder).encode(requestDto.getNewPassword());
+        verify(userRepository).save(existingUser);
+        verify(userMapper).toResponse(existingUser);
     }
+
+    @Test
+    void alter_ShouldThrowException_WhenPasswordIsWrong() {
+        UserAlterRequestDto requestDto = new UserAlterRequestDto(
+                "maria@email.com",
+                "senhaErrada",
+                "Novo Nome",
+                "novo@email.com",
+                "novaSenha"
+        );
+
+        UserEntity existingUser = new UserEntity();
+        existingUser.setEmail(requestDto.getOldEmail());
+        existingUser.setPassword("senhaCriptAntiga");
+
+        when(userRepository.findByEmail(requestDto.getOldEmail()))
+                .thenReturn(Optional.of(existingUser));
+        when(bCryptPasswordEncoder.matches(requestDto.getOldpassword(), existingUser.getPassword()))
+                .thenReturn(false); // senha incorreta
+
+        assertThrows(UserPasswordNotRightException.class, () -> userService.alter(requestDto));
+
+        verify(userRepository).findByEmail(requestDto.getOldEmail());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void alter_ShouldOnlyChangeProvidedFields_WhenSomeAreBlank() {
+        UserAlterRequestDto requestDto = new UserAlterRequestDto(
+                "maria@email.com",
+                "senhaAntiga",
+                null, // nome não muda
+                "",   // email em branco
+                "novaSenha"
+        );
+
+        UserEntity existingUser = new UserEntity();
+        existingUser.setIdUser(UUID.randomUUID());
+        existingUser.setEmail(requestDto.getOldEmail());
+        existingUser.setName("Maria Original");
+        existingUser.setPassword("senhaCriptAntiga");
+
+        UserResponseDto expectedResponse = UserResponseDto.builder()
+                .id(existingUser.getIdUser())
+                .name("Maria Original")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(userRepository.findByEmail(requestDto.getOldEmail()))
+                .thenReturn(Optional.of(existingUser));
+        when(bCryptPasswordEncoder.matches(requestDto.getOldpassword(), existingUser.getPassword()))
+                .thenReturn(true);
+        when(bCryptPasswordEncoder.encode(requestDto.getNewPassword()))
+                .thenReturn("senhaCriptNova");
+        when(userRepository.save(any(UserEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userMapper.toResponse(existingUser))
+                .thenReturn(expectedResponse);
+
+        // ACT
+        UserResponseDto result = userService.alter(requestDto);
+
+        // ASSERT
+        assertEquals("Maria Original", existingUser.getName());
+        assertEquals(requestDto.getOldEmail(), existingUser.getEmail()); // não alterado
+        assertEquals("senhaCriptNova", existingUser.getPassword());
+
+        verify(userRepository).save(existingUser);
+    }
+
 }
