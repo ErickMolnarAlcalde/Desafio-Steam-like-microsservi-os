@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Arquivos de configuração sensíveis
+application-secrets.properties
