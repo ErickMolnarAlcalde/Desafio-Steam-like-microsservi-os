@@ -37,4 +37,4 @@ out/
 .vscode/
 
 # Arquivos de configuração sensíveis
-application-secrets.properties
+src/main/resources/application-secrets.properties

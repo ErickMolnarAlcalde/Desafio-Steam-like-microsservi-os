@@ -4,6 +4,7 @@ import com.desafio.user_and_wallet_service.Exceptions.UserEmailAlreadyExistsExce
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
 import com.desafio.user_and_wallet_service.Exceptions.UserPasswordNotRightException;
 import com.desafio.user_and_wallet_service.Exceptions.WalletIdNotFoundException;
+import com.desafio.user_and_wallet_service.Producer.UserProducer;
 import com.desafio.user_and_wallet_service.dtos.LoginRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserAlterRequestDto;
 import com.desafio.user_and_wallet_service.dtos.UserRequestDto;
@@ -13,6 +14,7 @@ import com.desafio.user_and_wallet_service.entities.WalletEntity;
 import com.desafio.user_and_wallet_service.mappers.UserMapper;
 import com.desafio.user_and_wallet_service.repositories.UserRepository;
 import com.desafio.user_and_wallet_service.repositories.WalletRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,9 @@ public class UserService {
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final WalletRepository walletRepository;
+    private final UserProducer userProducer;
 
+    @Transactional
     public UserResponseDto create(UserRequestDto userRequestDto){
         if(userRepository.existsByEmail(userRequestDto.getEmail())){
             throw new UserEmailAlreadyExistsException("Email já cadastrado!");
@@ -41,6 +45,7 @@ public class UserService {
 
         entity.setWallet(wallet);
         var savedEntity = userRepository.save(entity);
+        userProducer.publishMessage(entity);
         return userMapper.toResponse(savedEntity);
     }
 
