@@ -30,6 +30,5 @@ public class EmailModel {
     private String emailText;
     private LocalDateTime timeStamp;
     private StatusEmail statusEmail;
-
-
 }
+
