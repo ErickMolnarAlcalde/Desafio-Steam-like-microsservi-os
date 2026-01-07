@@ -18,6 +18,7 @@ public class WalletService {
 
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public WalletResponseDto depositValue(WalletRequestDto requestDto){
         var entity = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(()->
@@ -26,6 +27,8 @@ public class WalletService {
         var wallet = entity.getWallet();
         wallet.setBalance(wallet.getBalance().add(requestDto.getValue()));
         walletRepository.save(wallet);
+        emailService.sendDepositEmail(entity.getEmail(), entity.getName(), requestDto.getValue(), wallet.getBalance());
+
 
         return WalletResponseDto.builder()
                 .userName(entity.getName())
@@ -44,6 +47,8 @@ public class WalletService {
 
             wallet.setBalance(wallet.getBalance().subtract(requestDto.getValue()));
         walletRepository.save(wallet);
+        emailService.sendWithdrawEmail(entity.getEmail(), entity.getName(), requestDto.getValue(), wallet.getBalance());
+
 
         return WalletResponseDto.builder()
                 .userName(entity.getName())
