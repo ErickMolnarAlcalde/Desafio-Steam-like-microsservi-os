@@ -1,6 +1,5 @@
 package com.desafio.user_and_wallet_service.services;
 
-import com.desafio.user_and_wallet_service.Exceptions.UserEmailAlreadyExistsException;
 import com.desafio.user_and_wallet_service.Exceptions.UserEmailNotfoundException;
 import com.desafio.user_and_wallet_service.Exceptions.WalletValueNotEnoughException;
 import com.desafio.user_and_wallet_service.dtos.WalletRequestDto;
@@ -9,8 +8,6 @@ import com.desafio.user_and_wallet_service.repositories.UserRepository;
 import com.desafio.user_and_wallet_service.repositories.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
