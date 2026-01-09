@@ -29,6 +29,7 @@ public class EmailService {
 
     @Value(value = "${spring.mail.username}")
     private String emailFrom;
+
     @Transactional
     public EmailModel sendEmail(EmailModel emailModel) {
         try {
